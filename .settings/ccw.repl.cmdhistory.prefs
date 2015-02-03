@@ -1,0 +1,2 @@
+cmdhistory=["(tsukomi)" "(board)" "(put-piece (board) \:white 4 6)" "(piece-at [[\\"x\\"]] 1 0)" "(same-color? [[\\"x\\" \\"o\\"]] \:white 0 1)"]
+eclipse.preferences.version=1
