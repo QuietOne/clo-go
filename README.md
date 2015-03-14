@@ -1,7 +1,10 @@
 # clo-go
 
-Attempt to make a good AI for Go in Clojure.
+Attempt to make a good AI for Go with Clojure.
 
+###
+
+Monte Carlo AI is functional and will play randomized possible moves on board, without any strategy.
 
 ## License
 
