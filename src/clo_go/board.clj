@@ -1,4 +1,5 @@
-(ns clo-go.board)
+(ns clo-go.board
+  (:use [clo-go.scoring-system :only [white-score black-score]]))
 
 (def board-size 19)
 
@@ -148,12 +149,16 @@
   (if (and
         (valid-pos? x y)
         (same-color? board color x y))
-    (->
-      (remove-piece board x y)
-      (remove-struct-of-color color (inc x) y)
-      (remove-struct-of-color color x (inc y))
-      (remove-struct-of-color color (dec x) y)
-      (remove-struct-of-color color x (dec y)))
+    (do
+      (if (= (opposite color) :white)
+        (swap! white-score inc)
+        (swap! black-score inc))
+      (->
+        (remove-piece board x y)
+        (remove-struct-of-color color (inc x) y)
+        (remove-struct-of-color color x (inc y))
+        (remove-struct-of-color color (dec x) y)
+        (remove-struct-of-color color x (dec y))))
     board))
 
 (defn remove-if-no-liberty [board color x y]
