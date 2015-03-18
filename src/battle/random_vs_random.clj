@@ -1,6 +1,7 @@
 (ns battle.random-vs-random
   (:require [ai.monte-carlo :refer :all])
-  (:require [clo-go.board :refer :all]))
+  (:require [clo-go.board :refer :all])
+  (:require [util.persistance :refer :all]))
 
 (defn random-VS-random []
   (let [black-is-playing (atom true)
@@ -40,8 +41,13 @@
                             (reset! black-is-playing true)))
                         (recur (dec x)))))))))
           (add-score-from-territory (calculate-territory @game-board))
-          (println "Black score:" @black-score)
-          (println "White score:" (+ @white-score 7))
-          (println @game-board))))
+          (persist-results @black-score @white-score @game-board "randomVSrandom")
+          #_(println "Black score:" @black-score)
+          #_(println "White score:" @white-score)
+          #_(println @game-board))))
 
-(random-VS-random)
+(loop [x 10000]
+  (when (> x 0)
+    (println x)
+    (random-VS-random)
+    (recur (dec x))))
