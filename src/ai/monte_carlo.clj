@@ -1,5 +1,5 @@
 (ns ai.monte-carlo
-  (:require [clo-go.board :only [boardsize]]))
+  (:require [clo-go.board :refer :all]))
 
 (def num-of-tries 10)
 
