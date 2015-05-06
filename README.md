@@ -119,6 +119,79 @@ White score: 4
  [o o x - - x x x x - x - o o - - - x o] 
  [o - o o - o - - o x o - - - x o - x -]]
 ```
+
+###Monte Carlo AI vs Greedy AI
+
+In following experiments the black was the Monte Carlo AI and the white was the Greedy AI. Greedy AI always win with overwhelming difference. In most cases, Greedy AI eliminate all of the Monte Carlo AI's pieces, and rarely some pieces are left, if the Monte Carlo AI is able to make them safe.
+
+```
+Black score: 0
+White score: 306
+[[o o - o o - o o - o - o o - o - o - o]
+ [- o o o - o - o o o o o o o - o o o -] 
+ [o - o - o - o - o - o o o o o o o - o] 
+ [o o - o - o - o - o o - o o - o o o -] 
+ [- o o o o - o - o o - o - o o o - o o] 
+ [o - o - o o - o - o o - o - o - - o o] 
+ [o o - o o - o - o - o o - o - o o o -] 
+ [- o o - - o - o - o o - o - o - o - o] 
+ [- - o - o o - o o - - o - o - o - o o] 
+ [o - - - - - - - - - o o - o o o o o -] 
+ [- - - - o - - - - o - o o - o - o - o] 
+ [- - o o o o o o - - o - o o o o o o -] 
+ [o o o o - o - o - o - o o - - - - o o] 
+ [- o o - o o o o o - o - o o o - o - o] 
+ [o - o o - o - o - o - o o o - o o o -] 
+ [- o - o o - o - o - o - o o o o - o o] 
+ [o - o o - o - o - o - o o - o o o o -] 
+ [- o - - o - o - o - o o - o o - o - o] 
+ [o - - o - o - o - o - o o - o o o o -]]
+
+Black score: 1
+White score: 311
+[[- o o - o - o - o o - o - o - o - o o]
+ [o - o o - o o o - o o - o - o o o o -] 
+ [- o o - o o o - o - o o - o o - o - o] 
+ [o - o o o - o o - o - o o o - o o o -] 
+ [- o - o - o - o o o - o o - o - o - o] 
+ [o - o o o - o - o - o o - o - o - o -] 
+ [- o - o o o - o - o o - o - o - o - o] 
+ [o - o o - o o - o - o o o o - o - o -] 
+ [- o - o o - o o o o - o o - o o o - o] 
+ [o - o - o o - o - o o - o o o o o o -] 
+ [o o o o - o o o o o - o - - o - o o o] 
+ [o o o - o - o - o o o - o o - o o - o]
+ [- o - o - o o o o - o o - o o - o o o] 
+ [o - o - o - o - o o o - o o - o - o -] 
+ [- o o o - o - o - o - o - o o - o - o] 
+ [o o - o o - o - o - o o o o - o - o -] 
+ [o - o o - o o o o o o - o - o - o - o] 
+ [o o o - - o - o - o - o - o - o - o -] 
+ [- o - o - o o - o - o - o - o - o - o]]
+
+Black score: 5
+White score: 209
+[[o - o x o - o o - o - o - o - o - o -]
+ [- o o x o o - o o o o - o - o o o - o] 
+ [o x x x o - o - o - o o - o o o - o o] 
+ [x x o o - o - o - o o - o o o o o o -] 
+ [o x x x o - o o o o x o o - - o o - o] 
+ [- o x x x o o x x x x o - o - o - o -] 
+ [o - o x x x x x x x x x o o o - o - o] 
+ [- o - o x x o o o x x x x x o o - o -] 
+ [o - o - o o - o x x - x x o - o - - o] 
+ [- o - o - o o x x - x x - x o - o o -] 
+ [o o o o o - o x x x x - x x x o o - o] 
+ [o - o - o o o x x x x x x x o - o o -] 
+ [- o - o - o o o x o o x o o - o o - o] 
+ [- o o - o o - o o - o o - o o o - o -] 
+ [o - o o - o o o - o - o o - o - o - o] 
+ [- o - o o - o - o - o o - o - o o o -] 
+ [o - o - o o o - o o o - o - o o - o o] 
+ [o o o o - o - o - o - o - o o - o - o] 
+ [- o - o o - o - o - o - o o - o - o -]]
+ ```
+
  
 ## License
 

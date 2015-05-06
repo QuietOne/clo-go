@@ -4,8 +4,8 @@
   (:require [clo-go.board :refer :all])
   (:require [util.persistance :refer :all]))
 
-(def num-of-tries-white 1)
 (def num-of-tries-black 5)
+(def num-of-tries-white 1)
 
 (defn black-random-VS-white-greedy []
   (let [black-is-playing (atom true)
@@ -28,7 +28,8 @@
                             (do
                               (reset! game-board (add-piece @game-board :black pos))
                               (reset! white-is-playing true)
-                              (reset! black-is-playing true)))
+                              (reset! black-is-playing true)
+                              (println @game-board)))
                           (recur (dec x))))))))
               (if @white-is-playing
                 (do
@@ -42,7 +43,8 @@
                           (do
                             (reset! game-board (add-piece @game-board :white pos))
                             (reset! white-is-playing true)
-                            (reset! black-is-playing true)))
+                            (reset! black-is-playing true)
+                            (println @game-board)))
                         (recur (dec x)))))))))
           (add-score-from-territory (calculate-territory @game-board))
           ;(persist-results @black-score @white-score @game-board "black-randomVSwhite-greedy")
