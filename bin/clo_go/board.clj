@@ -3,17 +3,17 @@
 (def board-size 19)
 
 (defn board []
-  (vec (repeat board-size (vec (repeat board-size "-")))))
+  (vec (repeat board-size (vec (repeat board-size '-)))))
 
 (defn put-piece [board color x y]
   (if (= color :white)
-    (assoc-in board [x y] "o")
-    (assoc-in board [x y] "x")))
+    (assoc-in board [x y] 'o)
+    (assoc-in board [x y] 'x)))
 
 (defn piece-at [board x y]
   (cond 
-    (= ((board x) y) "x") :black
-    (= ((board x) y) "o") :white
+    (= ((board x) y) 'x) :black
+    (= ((board x) y) 'o) :white
     :else :empty))
 
 (defn same-color?
@@ -50,7 +50,7 @@
     (not (empty-field? board x y))))
 
 (defn ^:private remove-piece [board x y]
-  (assoc-in board [x y] "-"))
+  (assoc-in board [x y] '-))
 
 (defn ^:private liber? [board v color x y]
   (if (not (.contains v [x y]))
@@ -124,16 +124,14 @@
           (if (not (.contains @points [x (inc y)])) 
             (swap! points conj [x (inc y)]))
           (if (same-color? board color x (inc y))
-            (liber-points board (conj v [x y]) points color x (inc y)))))
-)))
+            (liber-points board (conj v [x y]) points color x (inc y))))))))
 
 (defn liberty-points [board color x y]
   (if (valid-pos? x y)
     (if (same-color? board color x y)
       (let [points (atom '())]
-        (do
-          (liber-points board '() points color x y)
-          (count @points)))
+        (liber-points board '() points color x y)
+        (count @points))
       401)
     401))
 
@@ -163,14 +161,12 @@
             (same-color? board color x (inc y)))
         (do
           (if (not (.contains @v [x y])) (swap! v conj [x y]))
-          (str-points board v color x (inc y))))
-)))
+          (str-points board v color x (inc y)))))))
 
 (defn structure-points [board color x y]
   (let [points (atom '())]
-    (do
-      (str-points board points color x y)
-      (count @points))))
+    (str-points board points color x y)
+    (count @points)))
 
 (defn suicide? [board color x y]
   (and
@@ -261,9 +257,9 @@
 ;scoring system
 (defn color-field [board color x y]
   (cond 
-    (= color :white) (assoc-in board [x y] "O")
-    (= color :black) (assoc-in board [x y] "X")
-    :else (assoc-in board [x y] "M")))
+    (= color :white) (assoc-in board [x y] 'O)
+    (= color :black) (assoc-in board [x y] 'X)
+    :else (assoc-in board [x y] 'M)))
 
 (defn coloring 
   ([board color x y]
@@ -344,7 +340,7 @@
       (loop [y (dec board-size)]
         (when (>= y 0)
           (cond 
-            (= ((scoring-board x) y) "X") (swap! black-score inc)
-            (= ((scoring-board x) y) "O") (swap! white-score inc))
+            (= ((scoring-board x) y) 'X) (swap! black-score inc)
+            (= ((scoring-board x) y) 'O) (swap! white-score inc))
           (recur (dec y))))
       (recur (dec x)))))
