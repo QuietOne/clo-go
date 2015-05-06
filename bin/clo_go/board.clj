@@ -87,6 +87,7 @@
           (valid-pos? x (inc y))
           (same-color? board color x (inc y))
           (liber? board (conj v [x y]) color x (inc y)))))))
+        
 
 (defn liberty? [board color x y]
   (liber? board '() color x y))
@@ -96,6 +97,80 @@
     (valid-pos? x y)
     (same-color? board color x y)
     (not (liberty? board color x y))))
+
+(defn ^:private liber-points [board v points color x y]
+  (if (and (valid-pos? x y) (not (.contains v [x y])))
+    (do
+      (if (valid-pos? (dec x) y)
+        (if (empty-field? board (dec x) y)
+          (if (not (.contains @points [(dec x) y])) 
+            (swap! points conj [(dec x) y]))
+          (if (same-color? board color (dec x) y)
+            (liber-points board (conj v [x y]) points color (dec x) y))))
+      (if (valid-pos? (inc x) y)
+        (if (empty-field? board (inc x) y)
+          (if (not (.contains @points [(inc x) y])) 
+            (swap! points conj [(inc x) y]))
+          (if (same-color? board color (inc x) y)
+            (liber-points board (conj v [x y]) points color (inc x) y))))     
+      (if (valid-pos? x (dec y))
+        (if (empty-field? board x (dec y))
+          (if (not (.contains @points [x (dec y)])) 
+            (swap! points conj [x (dec y)]))
+          (if (same-color? board color x (dec y))
+            (liber-points board (conj v [x y]) points color x (dec y)))))
+      (if (valid-pos? x (inc y))
+        (if (empty-field? board x (inc y))
+          (if (not (.contains @points [x (inc y)])) 
+            (swap! points conj [x (inc y)]))
+          (if (same-color? board color x (inc y))
+            (liber-points board (conj v [x y]) points color x (inc y)))))
+)))
+
+(defn liberty-points [board color x y]
+  (if (valid-pos? x y)
+    (if (same-color? board color x y)
+      (let [points (atom '())]
+        (do
+          (liber-points board '() points color x y)
+          (count @points)))
+      401)
+    401))
+
+(defn ^:private str-points [board v color x y]
+  (if (and (valid-pos? x y) (not (.contains @v [x y])))
+    (do
+      (if (and
+            (valid-pos? (dec x) y)
+            (same-color? board color (dec x) y))
+        (do
+          (if (not (.contains @v [x y])) (swap! v conj [x y]))
+          (str-points board v color (dec x) y)))
+      (if (and
+            (valid-pos? (inc x) y)
+            (same-color? board color (inc x) y))
+        (do
+          (if (not (.contains @v [x y])) (swap! v conj [x y]))
+          (str-points board v color (inc x) y)))
+      (if (and
+            (valid-pos? x (dec y))
+            (same-color? board color x (dec y)))
+        (do
+          (if (not (.contains @v [x y])) (swap! v conj [x y]))
+          (str-points board v color x (dec y))))
+      (if (and
+            (valid-pos?  x (inc y))
+            (same-color? board color x (inc y)))
+        (do
+          (if (not (.contains @v [x y])) (swap! v conj [x y]))
+          (str-points board v color x (inc y))))
+)))
+
+(defn structure-points [board color x y]
+  (let [points (atom '())]
+    (do
+      (str-points board points color x y)
+      (count @points))))
 
 (defn suicide? [board color x y]
   (and
