@@ -43,13 +43,15 @@
                             (reset! black-is-playing true)))
                         (recur (dec x)))))))))
           (add-score-from-territory (calculate-territory @game-board))
-          (persist-results @black-score @white-score @game-board "randomVSrandom")
-          #_(println "Black score:" @black-score)
-          #_(println "White score:" @white-score)
-          #_(println @game-board))))
+          ;(persist-results @black-score @white-score @game-board "randomVSrandom")
+          (println "Black score:" @black-score)
+          (println "White score:" @white-score)
+          (println @game-board))))
 
-(loop [x 1000]
-  (when (> x 0)
-    (println x)
-    (random-VS-random)
-    (recur (dec x))))
+#_(loop [x 1000]
+   (when (> x 0)
+     (println x)
+     (random-VS-random)
+     (recur (dec x))))
+
+(random-VS-random)
