@@ -120,7 +120,7 @@ White score: 4
  [o - o o - o - - o x o - - - x o - x -]]
 ```
 
-###Monte Carlo AI vs Greedy AI
+###Monte Carlo AI VS Greedy AI
 
 In following experiments the black was the Monte Carlo AI and the white was the Greedy AI. Greedy AI always win with overwhelming difference. In most cases, Greedy AI eliminate all of the Monte Carlo AI's pieces, and rarely some pieces are left, if the Monte Carlo AI is able to make them safe.
 
@@ -191,6 +191,12 @@ White score: 209
  [o o o o - o - o - o - o - o o - o - o] 
  [- o - o o - o - o - o - o o - o - o -]]
  ```
+
+###Greedy AI VS Greedy AI
+
+When first implemented, two AIs have fought over the same piece, to the ko rule has been implemented for this game.
+
+There is no winner, as the game finds the endless loop that ko rule isn't able to stop. There are two positions in game where the ko rule could apply, so the AI will choose one where it can play.
 
  
 ## License

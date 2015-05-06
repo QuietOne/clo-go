@@ -3,8 +3,8 @@
   (:require [clo-go.board :refer :all])
   (:require [util.persistance :refer :all]))
 
-(def num-of-tries-white 3)
-(def num-of-tries-black 3)
+(def num-of-tries-white 10)
+(def num-of-tries-black 10)
 
 (defn greedy-VS-greedy []
   (let [black-is-playing (atom true)
