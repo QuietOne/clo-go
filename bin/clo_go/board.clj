@@ -1,5 +1,7 @@
-(ns clo-go.board)
+(ns clo-go.board
+  (:require [clo-go.board-nav :refer :all]))
 
+;basic board matrix operations for board
 (def board-size 19)
 
 (defn board []
@@ -17,10 +19,9 @@
     :else :empty))
 
 (defn same-color?
-  ([board color x y]
-    (= color (piece-at board x y)))
-  ([board x y x1 y1]
-    (= (piece-at board x y) (piece-at board x1 y1))))
+  ([board color x y] (= color (piece-at board x y)))
+  ([board x y x1 y1] (= (piece-at board x y) (piece-at board x1 y1)))
+  ([board color [x y]] (same-color? board color x y)))
 
 (defn not-same-color? [board x y x1 y1]
   (not (same-color? board x y x1 y1)))
@@ -31,258 +32,276 @@
     (= color :black) :white
     :else :empty))
 
-(defn empty-field? [board x y]
-  (= (piece-at board x y) :empty))
+(defn empty-field? 
+  ([board x y] (= (piece-at board x y) :empty))
+  ([board [x y]] (empty-field? board x y)))
 
-(defn valid-pos? [x y]
-  (and
-    (< x board-size)
-    (< y board-size)
-    (>= x 0)
-    (>= y 0)))
+(defn valid-pos?
+  ([x y] (and
+           (< x board-size)
+           (< y board-size)
+           (>= x 0)
+           (>= y 0)))
+  ([[x y]] (valid-pos? x y)))
 
-(defn not-valid-pos? [x y]
-  (not (valid-pos? x y)))
+(defn not-valid-pos? 
+  ([x y] (not (valid-pos? x y)))
+  ([[x y]] (not-valid-pos? x y)))
 
-(defn occupied? [board x y]
-  (or
-    (not-valid-pos? x y)
-    (not (empty-field? board x y))))
+(defn occupied? 
+  ([board x y] (or
+                 (not-valid-pos? x y)
+                 (not (empty-field? board x y))))
+  ([board [x y]] (occupied? board x y)))
 
-(defn ^:private remove-piece [board x y]
-  (assoc-in board [x y] '-))
+(defn ^:private remove-piece [board pos]
+  (assoc-in board pos '-))
 
-(defn ^:private liber? [board v color x y]
-  (if (not (.contains v [x y]))
+(defn ^:private liber? [board v color pos]
+  (if (not (.contains v pos))
     (or
       (or
         (and 
-          (valid-pos? (dec x) y)
-          (empty-field? board (dec x) y))
+          (valid-pos? (up pos))
+          (empty-field? board (up pos)))
         (and
-          (valid-pos? (dec x) y)
-          (same-color? board color (dec x) y)
-          (liber? board (conj v [x y]) color (dec x) y)))
+          (valid-pos? (up pos))
+          (same-color? board color (up pos))
+          (liber? board (conj v pos) color (up pos))))
       (or
         (and
-          (valid-pos? (inc x) y)
-          (empty-field? board (inc x) y))
+          (valid-pos? (down pos))
+          (empty-field? board (down pos)))
         (and 
-          (valid-pos? (inc x) y)
-          (same-color? board color (inc x) y)
-          (liber? board (conj v [x y]) color (inc x) y)))
+          (valid-pos? (down pos))
+          (same-color? board color (down pos))
+          (liber? board (conj v pos) color (down pos))))
       (or
         (and
-          (valid-pos? x (dec y))
-          (empty-field? board x (dec y)))
+          (valid-pos? (left pos))
+          (empty-field? board (left pos)))
         (and           
-          (valid-pos? x (dec y))
-          (same-color? board color x (dec y))
-          (liber? board (conj v [x y]) color x (dec y))))
+          (valid-pos? (left pos))
+          (same-color? board color (left pos))
+          (liber? board (conj v pos) color (left pos))))
       (or
         (and
-          (valid-pos? x (inc y))
-          (empty-field? board x (inc y)))
+          (valid-pos? (right pos))
+          (empty-field? board (right pos)))
         (and 
-          (valid-pos? x (inc y))
-          (same-color? board color x (inc y))
-          (liber? board (conj v [x y]) color x (inc y)))))))
+          (valid-pos? (right pos))
+          (same-color? board color (right pos))
+          (liber? board (conj v pos) color (right pos)))))))
         
 
-(defn liberty? [board color x y]
-  (liber? board '() color x y))
+(defn liberty? 
+  ([board color x y] (liber? board '() color [x y]))
+  ([board color pos] (liber? board '() color pos)))
 
-(defn no-liberty? [board color x y]
-  (and
-    (valid-pos? x y)
-    (same-color? board color x y)
-    (not (liberty? board color x y))))
+(defn no-liberty? 
+  ([board color x y]
+    (and
+      (valid-pos? x y)
+      (same-color? board color x y)
+      (not (liberty? board color x y))))
+  ([board color [x y]] 
+    (no-liberty? board color x y)))
 
-(defn ^:private liber-points [board v points color x y]
-  (if (and (valid-pos? x y) (not (.contains v [x y])))
+(defn ^:private liber-points [board v points color pos]
+  (if (and (valid-pos? pos) (not (.contains v pos)))
     (do
-      (if (valid-pos? (dec x) y)
-        (if (empty-field? board (dec x) y)
-          (if (not (.contains @points [(dec x) y])) 
-            (swap! points conj [(dec x) y]))
-          (if (same-color? board color (dec x) y)
-            (liber-points board (conj v [x y]) points color (dec x) y))))
-      (if (valid-pos? (inc x) y)
-        (if (empty-field? board (inc x) y)
-          (if (not (.contains @points [(inc x) y])) 
-            (swap! points conj [(inc x) y]))
-          (if (same-color? board color (inc x) y)
-            (liber-points board (conj v [x y]) points color (inc x) y))))     
-      (if (valid-pos? x (dec y))
-        (if (empty-field? board x (dec y))
-          (if (not (.contains @points [x (dec y)])) 
-            (swap! points conj [x (dec y)]))
-          (if (same-color? board color x (dec y))
-            (liber-points board (conj v [x y]) points color x (dec y)))))
-      (if (valid-pos? x (inc y))
-        (if (empty-field? board x (inc y))
-          (if (not (.contains @points [x (inc y)])) 
-            (swap! points conj [x (inc y)]))
-          (if (same-color? board color x (inc y))
-            (liber-points board (conj v [x y]) points color x (inc y))))))))
+      (if (valid-pos? (up pos))
+        (if (empty-field? board (up pos))
+          (if (not (.contains @points (up pos))) 
+            (swap! points conj (up pos)))
+          (if (same-color? board color (up pos))
+            (liber-points board (conj v pos) points color (up pos)))))
+      (if (valid-pos? (down pos))
+        (if (empty-field? board (down pos))
+          (if (not (.contains @points (down pos)))
+            (swap! points conj (down pos)))
+          (if (same-color? board color (down pos))
+            (liber-points board (conj v pos) points color (down pos)))))
+      (if (valid-pos? (left pos))
+        (if (empty-field? board (left pos))
+          (if (not (.contains @points (left pos)))
+            (swap! points conj (left pos)))
+          (if (same-color? board color (left pos))
+            (liber-points board (conj v pos) points color (left pos)))))
+      (if (valid-pos? (right pos))
+        (if (empty-field? board (right pos))
+          (if (not (.contains @points (right pos)))
+            (swap! points conj (right pos)))
+          (if (same-color? board color (right pos))
+            (liber-points board (conj v pos) points color (right pos))))))))
 
-(defn liberty-points [board color x y]
-  (if (valid-pos? x y)
-    (if (same-color? board color x y)
-      (let [points (atom '())]
-        (liber-points board '() points color x y)
-        (count @points))
-      401)
-    401))
+(defn liberty-points 
+  ([board color pos]
+    (if (valid-pos? pos)
+      (if (same-color? board color pos)
+        (let [points (atom '())]
+          (liber-points board '() points color pos)
+          (count @points))
+        401)
+      401))
+  ([board color x y]
+    (liberty-points board color [x y])))
 
-(defn ^:private str-points [board v color x y]
+(defn ^:private str-points [board v color [x y]]
   (if (and (valid-pos? x y) (not (.contains @v [x y])))
     (do
       (if (and
-            (valid-pos? (dec x) y)
-            (same-color? board color (dec x) y))
+            (valid-pos? (up x y))
+            (same-color? board color (up x y)))
         (do
           (if (not (.contains @v [x y])) (swap! v conj [x y]))
-          (str-points board v color (dec x) y)))
+          (str-points board v color (up x y))))
       (if (and
-            (valid-pos? (inc x) y)
-            (same-color? board color (inc x) y))
+            (valid-pos? (down x y))
+            (same-color? board color (down x y)))
         (do
           (if (not (.contains @v [x y])) (swap! v conj [x y]))
-          (str-points board v color (inc x) y)))
+          (str-points board v color (down x y))))
       (if (and
-            (valid-pos? x (dec y))
-            (same-color? board color x (dec y)))
+            (valid-pos? (left x y))
+            (same-color? board color (left x y)))
         (do
           (if (not (.contains @v [x y])) (swap! v conj [x y]))
-          (str-points board v color x (dec y))))
+          (str-points board v color (left x y))))
       (if (and
-            (valid-pos?  x (inc y))
-            (same-color? board color x (inc y)))
+            (valid-pos?  (right x y))
+            (same-color? board color (right x y)))
         (do
           (if (not (.contains @v [x y])) (swap! v conj [x y]))
-          (str-points board v color x (inc y)))))))
+          (str-points board v color (right x y)))))))
 
 (defn structure-points [board color x y]
   (let [points (atom '())]
-    (str-points board points color x y)
+    (str-points board points color [x y])
     (count @points)))
 
 (defn suicide? [board color x y]
   (and
     (or
-      (not-valid-pos? (dec x) y)
+      (not-valid-pos? (up x y))
       (and
-        (occupied? board (dec x) y)
-        (if (same-color? board color (dec x) y)
+        (occupied? board (up x y))
+        (if (same-color? board color (up x y))
           (no-liberty? (put-piece board color x y) color x y)
-          (liberty? (put-piece board color x y) (opposite color) (dec x) y))))
+          (liberty? (put-piece board color x y) (opposite color) (up x y)))))
     (or
-      (not-valid-pos? (inc x) y)
+      (not-valid-pos? (down x y))
       (and
-        (occupied? board (inc x) y)
-        (if (same-color? board color (inc x) y)
+        (occupied? board (down x y))
+        (if (same-color? board color (down x y))
           (no-liberty? (put-piece board color x y) color x y)
-          (liberty? (put-piece board color x y) (opposite color) (inc x) y))))
+          (liberty? (put-piece board color x y) (opposite color) (down x y)))))
     (or
-      (not-valid-pos? x (dec y))
+      (not-valid-pos? (left x y))
       (and
-        (occupied? board x (dec y))
-        (if (same-color? board color x (dec y))
+        (occupied? board (left x y))
+        (if (same-color? board color (left x y))
           (no-liberty? (put-piece board color x y) color x y)
-          (liberty? (put-piece board color x y) (opposite color) x (dec y)))))
+          (liberty? (put-piece board color x y) (opposite color) (left x y)))))
     (or
-      (not-valid-pos? x (inc y))
+      (not-valid-pos? (right x y))
       (and
-        (occupied? board x (inc y))
-        (if (same-color? board color x (inc y))
+        (occupied? board (right x y))
+        (if (same-color? board color (right x y))
           (no-liberty? (put-piece board color x y) color x y)
-          (liberty? (put-piece board color x y) (opposite color) x (inc y)))))))
+          (liberty? (put-piece board color x y) (opposite color) (right x y)))))))
 
 (defn not-suicide? [board color x y]
   (not (suicide? board color x y)))
 
 (defn suicide-with-benefits? 
-  ([board color [x y]] (suicide-with-benefits? board color x y))
-  ([board color x y] (and
-                       (valid-pos? x y)
-                       (empty-field? board x y)
-                       (or
-                         (not-suicide? board color x y)
-                         (or
-                           (no-liberty?  (put-piece board color x y) (opposite color) (dec x) y)
-                           (no-liberty?  (put-piece board color x y) (opposite color) x (dec y))
-                           (no-liberty?  (put-piece board color x y) (opposite color) (inc x) y)
-                           (no-liberty?  (put-piece board color x y) (opposite color) x (inc y)))))))
+  ([board color x y] 
+    (and
+      (valid-pos? x y)
+      (empty-field? board x y)
+      (or
+        (not-suicide? board color x y)
+        (or
+          (no-liberty?  (put-piece board color x y) (opposite color) (up x y))
+          (no-liberty?  (put-piece board color x y) (opposite color) (down x y))
+          (no-liberty?  (put-piece board color x y) (opposite color) (left x y))
+          (no-liberty?  (put-piece board color x y) (opposite color) (right x y))))))
+  ([board color [x y]] 
+    (suicide-with-benefits? board color x y)))
   
 ;atom used for storing scores
 (def black-score (atom 0))
 (def white-score (atom 0))
 
-(defn remove-struct-of-color [board color x y]
+(defn remove-struct-of-color [board color pos]
   (if (and
-        (valid-pos? x y)
-        (same-color? board color x y))
+        (valid-pos? pos)
+        (same-color? board color pos))
     (do
       (if (= (opposite color) :white)
         (swap! white-score inc)
         (swap! black-score inc))
       (->
-        (remove-piece board x y)
-        (remove-struct-of-color color (inc x) y)
-        (remove-struct-of-color color x (inc y))
-        (remove-struct-of-color color (dec x) y)
-        (remove-struct-of-color color x (dec y))))
+        (remove-piece board pos)
+        (remove-struct-of-color color (up pos))
+        (remove-struct-of-color color (down pos))
+        (remove-struct-of-color color (left pos))
+        (remove-struct-of-color color (right pos))))
     board))
 
-(defn remove-if-no-liberty [board color x y]
+(defn remove-if-no-liberty [board color pos]
   (if (and 
-        (valid-pos? x y)
-        (occupied? board x y)
-        (no-liberty? board color x y))
-    (remove-struct-of-color board color x y)
+        (valid-pos? pos)
+        (occupied? board pos)
+        (no-liberty? board color pos))
+    (remove-struct-of-color board color pos)
     board))
 
 (defn add-piece 
-  ([board color [x y]] (add-piece board color x y))
-  ([board color x y] (if (suicide-with-benefits? board color x y)
-                       (->
-                         (put-piece board color x y)
-                         (remove-if-no-liberty (opposite color) (dec x) y)
-                         (remove-if-no-liberty (opposite color) x (dec y))
-                         (remove-if-no-liberty (opposite color) (inc x) y)
-                         (remove-if-no-liberty (opposite color) x (inc y)))
-                       board)))
+  ([board color x y] 
+    (if (suicide-with-benefits? board color x y)
+      (->
+        (put-piece board color x y)
+        (remove-if-no-liberty (opposite color) (up x y))
+        (remove-if-no-liberty (opposite color) (down x y))
+        (remove-if-no-liberty (opposite color) (left x y))
+        (remove-if-no-liberty (opposite color) (right x y)))
+      board))
+  ([board color [x y]] 
+    (add-piece board color x y)))
 
 ;scoring system
-(defn color-field [board color x y]
-  (cond 
-    (= color :white) (assoc-in board [x y] 'O)
-    (= color :black) (assoc-in board [x y] 'X)
-    :else (assoc-in board [x y] 'M)))
-
-(defn coloring 
+(defn color-field 
   ([board color x y]
-    (coloring board '() color x y))
-  ([board checked color x y]
-    (if (and 
-          (valid-pos? x y)
-          (empty-field? board x y)
-          (not (.contains checked [x y])))
-      (->
-        (color-field board color x y)
-        (coloring (conj checked [x y]) color (dec x) y)
-        (coloring (conj checked [x y]) color (inc x) y)
-        (coloring (conj checked [x y]) color x (dec y))
-        (coloring (conj checked [x y]) color x (inc y)))
-      board)))
+    (cond 
+      (= color :white) (assoc-in board [x y] 'O)
+      (= color :black) (assoc-in board [x y] 'X)
+      :else (assoc-in board [x y] 'M)))
+  ([board color [x y]]
+    (color-field board color x y)))
+
+(defn ^:private coloring-checked [board checked color pos]
+  (if (and 
+        (valid-pos? pos)
+        (empty-field? board pos)
+        (not (.contains checked pos)))
+    (->
+      (color-field board color pos)
+      (coloring-checked (conj checked pos) color (up pos))
+      (coloring-checked (conj checked pos) color (down pos))
+      (coloring-checked (conj checked pos) color (left pos))
+      (coloring-checked (conj checked pos) color (right pos)))
+    board))
+
+(defn coloring [board color x y]
+  (coloring-checked board '() color [x y]))
 
 (declare ^:private help-search)
 (declare ^:private help-search1)
 
 (defn search-color 
   ([board x y] 
-      (search-color board '() (atom :unknown) x y))
+    (search-color board '() (atom :unknown) x y))
   ([board checked color x y] 
     (do
       (help-search1 board checked color x y)
@@ -291,28 +310,30 @@
 (defn ^:private help-search1 [board checked color x y]
   (if (not (.contains checked [x y]))
     (->
-      (help-search board (conj checked [x y]) color (dec x) y)
-      (help-search (conj checked [x y]) color x (dec y))
-      (help-search (conj checked [x y]) color (inc x) y)
-      (help-search (conj checked [x y]) color x (inc y)))
+      (help-search board (conj checked [x y]) color (up x y))
+      (help-search (conj checked [x y]) color (down x y))
+      (help-search (conj checked [x y]) color (left x y))
+      (help-search (conj checked [x y]) color (right x y)))
     board))
   
-(defn ^:private help-search [board checked color x y]
-  (if (not= @color :no-mans-land)
-    (if (valid-pos? x y)
-      (if (empty-field? board x y)
-        (help-search1 board checked color x y)
-        (if (= @color :unknown)
-          (do
-            (reset! color (piece-at board x y))
-            board)
-          (if (not= @color (piece-at board x y))
-            (do 
-              (reset! color :no-mans-land)
+(defn ^:private help-search 
+  ([board checked color x y]
+    (if (not= @color :no-mans-land)
+      (if (valid-pos? x y)
+        (if (empty-field? board x y)
+          (help-search1 board checked color x y)
+          (if (= @color :unknown)
+            (do
+              (reset! color (piece-at board x y))
               board)
-            board)))
-      board)
-    board))
+            (if (not= @color (piece-at board x y))
+              (do 
+                (reset! color :no-mans-land)
+                board)
+              board)))
+        board)
+      board))
+  ([board checked color [x y]] (help-search board checked color x y)))
 
 (defn search-and-color [board x y]
   (coloring board (search-color board x y) x y))
