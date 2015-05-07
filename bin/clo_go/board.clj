@@ -1,61 +1,6 @@
 (ns clo-go.board
-  (:require [clo-go.board-nav :refer :all]))
-
-;basic board matrix operations for board
-(def board-size 19)
-
-(defn board []
-  (vec (repeat board-size (vec (repeat board-size '-)))))
-
-(defn put-piece [board color x y]
-  (if (= color :white)
-    (assoc-in board [x y] 'o)
-    (assoc-in board [x y] 'x)))
-
-(defn piece-at [board x y]
-  (cond 
-    (= ((board x) y) 'x) :black
-    (= ((board x) y) 'o) :white
-    :else :empty))
-
-(defn same-color?
-  ([board color x y] (= color (piece-at board x y)))
-  ([board x y x1 y1] (= (piece-at board x y) (piece-at board x1 y1)))
-  ([board color [x y]] (same-color? board color x y)))
-
-(defn not-same-color? [board x y x1 y1]
-  (not (same-color? board x y x1 y1)))
-
-(defn opposite [color]
-  (cond
-    (= color :white) :black
-    (= color :black) :white
-    :else :empty))
-
-(defn empty-field? 
-  ([board x y] (= (piece-at board x y) :empty))
-  ([board [x y]] (empty-field? board x y)))
-
-(defn valid-pos?
-  ([x y] (and
-           (< x board-size)
-           (< y board-size)
-           (>= x 0)
-           (>= y 0)))
-  ([[x y]] (valid-pos? x y)))
-
-(defn not-valid-pos? 
-  ([x y] (not (valid-pos? x y)))
-  ([[x y]] (not-valid-pos? x y)))
-
-(defn occupied? 
-  ([board x y] (or
-                 (not-valid-pos? x y)
-                 (not (empty-field? board x y))))
-  ([board [x y]] (occupied? board x y)))
-
-(defn ^:private remove-piece [board pos]
-  (assoc-in board pos '-))
+  (:require [clo-go.board-nav :refer :all])
+  (:require [clo-go.board-struct :refer :all]))
 
 (defn ^:private liber? [board v color pos]
   (if (not (.contains v pos))
@@ -271,15 +216,6 @@
     (add-piece board color x y)))
 
 ;scoring system
-(defn color-field 
-  ([board color x y]
-    (cond 
-      (= color :white) (assoc-in board [x y] 'O)
-      (= color :black) (assoc-in board [x y] 'X)
-      :else (assoc-in board [x y] 'M)))
-  ([board color [x y]]
-    (color-field board color x y)))
-
 (defn ^:private coloring-checked [board checked color pos]
   (if (and 
         (valid-pos? pos)
@@ -361,7 +297,7 @@
       (loop [y (dec board-size)]
         (when (>= y 0)
           (cond 
-            (= ((scoring-board x) y) 'X) (swap! black-score inc)
-            (= ((scoring-board x) y) 'O) (swap! white-score inc))
+            (= (territory-color scoring-board x y) :black) (swap! black-score inc)
+            (= (territory-color scoring-board x y) :white) (swap! white-score inc))
           (recur (dec y))))
       (recur (dec x)))))
