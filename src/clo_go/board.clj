@@ -99,9 +99,9 @@
         (swap! points conj pos))
       (structure-points-checked board points color (nav-f pos)))))
 
-(defn structure-points [board color x y]
+(defn structure-points [board color pos]
   (let [points (atom '())]
-    (structure-points-checked board points color [x y])
+    (structure-points-checked board points color pos)
     (count @points)))
 
 (defn suicide? 
@@ -123,7 +123,7 @@
 (defn not-suicide? [board color pos]
   (not (suicide? board color pos)))
 
-(defn suicide-with-benefits? 
+(defn possible-move? 
   ([board color pos] 
     (and
       (valid-and-empty? board pos)
@@ -134,7 +134,7 @@
         (no-liberty?  (put-piece board color pos) (opposite color) (left pos))
         (no-liberty?  (put-piece board color pos) (opposite color) (right pos)))))
   ([board color x y] 
-    (suicide-with-benefits? board color [x y])))
+    (possible-move? board color [x y])))
   
 ;atom used for storing scores
 (def black-score (atom 0))
@@ -164,7 +164,7 @@
 
 (defn add-piece 
   ([board color pos] 
-    (if (suicide-with-benefits? board color pos)
+    (if (possible-move? board color pos)
       (->
         (put-piece board color pos)
         (remove-if-no-liberty (opposite color) (up pos))
@@ -257,3 +257,9 @@
             (= (territory-color scoring-board x y) :white) (swap! white-score inc))
           (recur (dec y))))
       (recur (dec x)))))
+
+(defn who-won [komi]
+  (cond
+    (< @black-score (+ @white-score komi)) :white
+    (> @black-score (+ @white-score komi)) :black
+    :else :draw))

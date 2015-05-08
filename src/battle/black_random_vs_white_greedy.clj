@@ -2,6 +2,7 @@
   (:require [ai.monte-carlo :refer :all])
   (:require [ai.greedy :refer :all])
   (:require [clo-go.board :refer :all])
+  (:require [clo-go.board-struct :refer :all])
   (:require [util.persistance :refer :all]))
 
 (def num-of-tries-black 5)
@@ -24,7 +25,7 @@
                         (do
                           (if (and
                                 (not @black-is-playing)
-                                (suicide-with-benefits? @game-board :black pos))
+                                (possible-move? @game-board :black pos))
                             (do
                               (reset! game-board (add-piece @game-board :black pos))
                               (reset! white-is-playing true)
@@ -39,7 +40,7 @@
                       (let [pos (get-best-position @game-board :white)]
                         (if (and
                               (not @white-is-playing)
-                              (suicide-with-benefits? @game-board :white pos))
+                              (possible-move? @game-board :white pos))
                           (do
                             (reset! game-board (add-piece @game-board :white pos))
                             (reset! white-is-playing true)
@@ -51,11 +52,3 @@
           (println "Black score:" @black-score)
           (println "White score:" @white-score)
           (println @game-board))))
-
-#_(loop [x 1000]
-   (when (> x 0)
-     (println x)
-     (black-random-VS-white-greedy)
-     (recur (dec x))))
-
-(black-random-VS-white-greedy)

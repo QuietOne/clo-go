@@ -1,5 +1,5 @@
 (ns ai.monte-carlo
-  (:require [clo-go.board :refer :all]))
+  (:require [clo-go.board-struct :refer :all]))
 
 
 (defn try-putting-piece-to []
