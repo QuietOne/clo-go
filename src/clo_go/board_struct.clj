@@ -6,17 +6,22 @@
 (defn board []
   (vec (repeat board-size (vec (repeat board-size '-)))))
 
-(defn put-piece [board color x y]
-  (if (= color :white)
-    (assoc-in board [x y] 'o)
-    (assoc-in board [x y] 'x)))
+(defn put-piece
+  ([board color pos]
+    (if (= color :white)
+      (assoc-in board pos 'o)
+      (assoc-in board pos 'x)))
+  ([board color x y]
+    (put-piece board color [x y])))
 
-(defn piece-at [board x y]
-  (let [piece ((board x) y)]
-    (cond 
-      (= piece 'x) :black
-      (= piece 'o) :white
-      :else :empty)))
+(defn piece-at
+  ([board [x y]] (piece-at board x y))
+  ([board x y]
+    (let [piece ((board x) y)]
+      (cond 
+        (= piece 'x) :black
+        (= piece 'o) :white
+        :else :empty))))
 
 (defn same-color?
   ([board color [x y]] (same-color? board color x y))
