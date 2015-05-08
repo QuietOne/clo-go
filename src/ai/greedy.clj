@@ -27,71 +27,37 @@
 (defn ^:private random-move []
   [(rand-int board-size) (rand-int board-size)])
   
-(defn get-best-position 
-  #_([board color] 
-     (let [pos (atom [-1 -1])
-           max (atom 0)
-           liberty (atom 400)]
-       (loop [x (dec board-size)]
-         (when (>= x 0)
-           (loop [y (dec board-size)]
-             (when (>= y 0)
-               (when (possible-move? board color x y)
-                 ;search for move to add points for immediate gain
-                 (check-for-immediate-gain board color max liberty pos up x y)
-                 (check-for-immediate-gain board color max liberty pos down x y)
-                 (check-for-immediate-gain board color max liberty pos left x y)
-                 (check-for-immediate-gain board color max liberty pos right x y)
-                 ;search for move to that will enable to score some points as soon as posssible
-                 (if (not= @liberty 0)
-                   (let [min-liberty (min-liberty-points board color [x y])
-                         min-points (min-points-gain board color [x y])]
-                     (when (> @liberty min-liberty)
-                       (reset! max min-points)
-                       (reset! liberty min-liberty)
-                       (reset! pos [x y]))
-                     (when (and 
-                             (= @liberty min-liberty)
-                             (< @max min-points)) 
-                       (reset! pos [x y])
-                       (reset! max min-points)))))
-               (recur (dec y))))
-           (recur (dec x))))
-       (if (= @pos [-1 -1]) 
-         (random-move)
-         @pos)))
-  
-  [board color ko-position] 
-    (let [pos (atom [-1 -1])
-          max (atom 0)
-          liberty (atom 400)]
-      (loop [x (dec board-size)]
-        (when (>= x 0)
-          (loop [y (dec board-size)]
-            (when (>= y 0)
-              (when (possible-move? board color x y)
-                ;search for move to add points to score
-                (check-for-immediate-gain board color max liberty pos up x y)
-                (check-for-immediate-gain board color max liberty pos down x y)
-                (check-for-immediate-gain board color max liberty pos left x y)
-                (check-for-immediate-gain board color max liberty pos right x y)
-                ;search for move to that will enable to score some points as soon as posssible
-                (if (not= @liberty 0)
-                  (let [min-liberty (min-liberty-points board color [x y])
-                        min-points (min-points-gain board color [x y])]
-                    (when (> @liberty min-liberty)
-                      (reset! max min-points)
-                      (reset! liberty min-liberty)
-                      (reset! pos [x y]))
-                    (when (and 
-                            (= @liberty min-liberty)
-                            (< @max min-points)) 
-                      (reset! pos [x y])
-                      (reset! max min-points)))))
-              (recur (dec y))))
-          (recur (dec x))))
-      (if (or 
-            (= @pos [-1 -1])
-            (= (add-piece board color @pos) ko-position))
-        (random-move)
-        @pos)))
+(defn get-best-position [board color ko-position] 
+  (let [pos (atom [-1 -1])
+        max (atom 0)
+        liberty (atom 400)]
+    (loop [x (dec board-size)]
+      (when (>= x 0)
+        (loop [y (dec board-size)]
+          (when (>= y 0)
+            (when (possible-move? board color x y)
+              ;search for move to add points to score
+              (check-for-immediate-gain board color max liberty pos up x y)
+              (check-for-immediate-gain board color max liberty pos down x y)
+              (check-for-immediate-gain board color max liberty pos left x y)
+              (check-for-immediate-gain board color max liberty pos right x y)
+              ;search for move to that will enable to score some points as soon as posssible
+              (if (not= @liberty 0)
+                (let [min-liberty (min-liberty-points board color [x y])
+                      min-points (min-points-gain board color [x y])]
+                  (when (> @liberty min-liberty)
+                    (reset! max min-points)
+                    (reset! liberty min-liberty)
+                    (reset! pos [x y]))
+                  (when (and 
+                          (= @liberty min-liberty)
+                          (< @max min-points)) 
+                    (reset! pos [x y])
+                    (reset! max min-points)))))
+            (recur (dec y))))
+        (recur (dec x))))
+    (if (or 
+          (= @pos [-1 -1])
+          (= (add-piece board color @pos) ko-position))
+      (random-move)
+      @pos)))

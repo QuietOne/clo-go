@@ -9,8 +9,5 @@
 (defn black-random-VS-white-greedy []
   (battle try-move get-best-position 5 2))
 
-(defn black-greedy-VS-white-random []
-  (battle get-best-position try-move 2 5))
-
 (defn greedy-VS-greedy []
   (battle get-best-position get-best-position 1 1))

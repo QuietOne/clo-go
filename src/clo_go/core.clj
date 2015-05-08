@@ -10,8 +10,7 @@
     (println "Insert a number to see a battle")
     (println "1 - Random VS Random")
     (println "2 - Black Random VS White Greedy")
-    (println "3 - Black Greedy VS White Random")
-    (println "4 - Greedy VS Greedy")))
+    (println "3 - Greedy VS Greedy")))
 
 (defn ^:private n-battles [battle n]
   (let [black-won (atom 0)
@@ -33,15 +32,13 @@
     (cond
       (= option 1) (random-VS-random)
       (= option 2) (black-random-VS-white-greedy)
-      (= option 3) (black-greedy-VS-white-random)
-      (= option 4) (greedy-VS-greedy)
+      (= option 43) (greedy-VS-greedy)
       :else "Option not available"))
   ([option n]
     (cond
       (= option 1) (n-battles random-VS-random n)
       (= option 2) (n-battles black-random-VS-white-greedy n)
-      (= option 3) (n-battles black-greedy-VS-white-random n)
-      (= option 4) (n-battles greedy-VS-greedy n)
+      (= option 3) (n-battles greedy-VS-greedy n)
       :else "Option not available")))
 
 (help)
