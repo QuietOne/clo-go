@@ -1,6 +1,6 @@
 (ns clo-go.board-struct)
-;basic API operations on structure that represents a board
 
+;;;basic API operations on structure that represents a board
 (def board-size 19)
 
 (defn board []
@@ -62,7 +62,7 @@
 (defn remove-piece [board pos]
   (assoc-in board pos '-))
 
-;API used for coloring when the game is finished
+;;;API used for coloring when the game is finished
 (defn color-field 
   ([board color [x y]]
     (color-field board color x y))

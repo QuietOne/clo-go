@@ -2,13 +2,19 @@
   (:require [clo-go.board-nav :refer :all])
   (:require [clo-go.board-struct :refer :all]))
 
+;;;helper functions
+
 (defn ^:private not-already-checked? [coll pos]
   (not (.contains coll pos)))
 
-#_(defn ^:private conj-if-not-already-checked [coll pos]
-   (if (not-already-checked? coll pos)
-     (conj coll pos)
-     coll))
+(defn ^:private valid-and-not-checked [coll pos]
+  (and
+    (valid-pos? pos)
+    (not-already-checked? coll pos)))
+
+(defn ^:private conj-if-not-already-checked [atom pos]
+  (if (not-already-checked? @atom pos)
+    (swap! atom conj pos)))
 
 (defn ^:private valid-and-empty? 
   ([board pos]
@@ -29,6 +35,8 @@
     (and
       (valid-pos? (nav-f pos))
       (same-color? board color (nav-f pos)))))
+
+;;; board operations
 
 (defn ^:private liberty-checking? 
   ([board coll color pos]
@@ -57,52 +65,49 @@
   ([board color x y]
     (no-liberty? board color [x y])))
 
-(defn ^:private liber-points 
+(defn ^:private liberty-points-checking 
   ([board coll points color pos]
-    (when (and 
-            (valid-pos? pos) 
-            (not-already-checked? coll pos))
-      (liber-points board coll points color up pos)
-      (liber-points board coll points color down pos)
-      (liber-points board coll points color left pos)
-      (liber-points board coll points color right pos)))
+    (when (valid-and-not-checked coll pos)
+      (liberty-points-checking board coll points color up pos)
+      (liberty-points-checking board coll points color down pos)
+      (liberty-points-checking board coll points color left pos)
+      (liberty-points-checking board coll points color right pos)))
   ([board coll points color nav-f pos]
     (if (valid-pos? (nav-f pos))
       (if (empty-field? board (nav-f pos))
-        (if (not-already-checked? @points (nav-f pos))
-          (swap! points conj (nav-f pos)))
+        (conj-if-not-already-checked points (nav-f pos))
         (if (same-color? board color (nav-f pos))
-          (liber-points board (conj coll pos) points color (nav-f pos)))))))
+          (liberty-points-checking board (conj coll pos) points color (nav-f pos)))))))
 
 (defn liberty-points 
   ([board color pos]
     (if (valid-and-same-color? board color pos)
       (let [points (atom '())]
-        (liber-points board '() points color pos)
+        (liberty-points-checking board '() points color pos)
         (count @points))
       401))
   ([board color x y]
     (liberty-points board color [x y])))
 
-(defn ^:private structure-points-checked 
+(defn ^:private structure-points-checking
   ([board points color pos]
-    (when (and 
-            (valid-pos? pos) 
-            (not-already-checked? @points pos))
-      (structure-points-checked board points color up pos)
-      (structure-points-checked board points color down pos)
-      (structure-points-checked board points color left pos)
-      (structure-points-checked board points color right pos)))
+    (when (valid-and-not-checked @points pos) 
+      (structure-points-checking board points color up pos)
+      (structure-points-checking board points color down pos)
+      (structure-points-checking board points color left pos)
+      (structure-points-checking board points color right pos)))
   ([board points color nav-f pos]
     (when (valid-and-same-color? board color nav-f pos)
-      (if (not-already-checked? @points pos) 
-        (swap! points conj pos))
-      (structure-points-checked board points color (nav-f pos)))))
+      (conj-if-not-already-checked points pos)
+      (structure-points-checking board points color (nav-f pos)))))
 
-(defn structure-points [board color pos]
-  (let [points (atom '())]
-    (structure-points-checked board points color pos)
-    (count @points)))
+(defn structure-points 
+  ([board color pos]
+    (let [points (atom '())]
+      (structure-points-checking board points color pos)
+      (count @points)))
+  ([board color x y]
+    (structure-points board color [x y])))
 
 (defn suicide? 
   ([board color pos]
@@ -136,7 +141,7 @@
   ([board color x y] 
     (possible-move? board color [x y])))
   
-;atom used for storing scores
+;;atoms used for storing scores
 (def black-score (atom 0))
 (def white-score (atom 0))
 
@@ -175,58 +180,55 @@
   ([board color x y] 
     (add-piece board color [x y])))
 
-;scoring system
-(defn ^:private coloring-checked [board checked color pos]
+;;; scoring system
+(defn ^:private coloring-checking [board coll color pos]
   (if (and 
         (valid-and-empty? board pos)
-        (not-already-checked? checked pos))
+        (not-already-checked? coll pos))
     (->
       (color-field board color pos)
-      (coloring-checked (conj checked pos) color (up pos))
-      (coloring-checked (conj checked pos) color (down pos))
-      (coloring-checked (conj checked pos) color (left pos))
-      (coloring-checked (conj checked pos) color (right pos)))
+      (coloring-checking (conj coll pos) color (up pos))
+      (coloring-checking (conj coll pos) color (down pos))
+      (coloring-checking (conj coll pos) color (left pos))
+      (coloring-checking (conj coll pos) color (right pos)))
     board))
 
 (defn coloring [board color x y]
-  (coloring-checked board '() color [x y]))
+  (coloring-checking board '() color [x y]))
 
-(declare ^:private help-search)
-(declare ^:private help-search1)
+(declare ^:private search-color-helper)
 
 (defn search-color 
   ([board x y] 
-    (search-color board '() (atom :unknown) [x y]))
+    (let [color (atom :unknown)]
+      (search-color board '() color [x y])
+      @color))
   ([board coll color pos] 
-    (do
-      (help-search1 board coll color pos)
-      @color)))
+    (if (not-already-checked? coll pos)
+      (->
+        (search-color-helper board (conj coll pos) color (up pos))
+        (search-color-helper (conj coll pos) color (down pos))
+        (search-color-helper (conj coll pos) color (left pos))
+        (search-color-helper (conj coll pos) color (right pos)))
+    board)))
 
-(defn ^:private help-search1 [board coll color pos]
-  (if (not-already-checked? coll pos)
-    (->
-      (help-search board (conj coll pos) color (up pos))
-      (help-search (conj coll pos) color (down pos))
-      (help-search (conj coll pos) color (left pos))
-      (help-search (conj coll pos) color (right pos)))
+(defn ^:private set-color! [board color-atom color]
+  (do 
+    (reset! color-atom color)
     board))
-  
-(defn ^:private help-search [board checked color pos]
-  (if (not= @color :no-mans-land)
-    (if (valid-pos? pos)
+
+(defn ^:private search-color-helper [board coll color pos]
+  (if (and
+        (not= @color :no-mans-land)
+        (valid-pos? pos))
       (if (empty-field? board pos)
-        (help-search1 board checked color pos)
+        (search-color board coll color pos)
         (if (= @color :unknown)
-          (do
-            (reset! color (piece-at board pos))
-            board)
+          (set-color! board color (piece-at board pos))
           (if (not= @color (piece-at board pos))
-            (do 
-              (reset! color :no-mans-land)
-              board)
+            (set-color! board color :no-mans-land)
             board)))
-      board)
-    board))
+      board))
 
 (defn search-and-color [board x y]
   (coloring board (search-color board x y) x y))
@@ -238,7 +240,7 @@
         (loop [y (dec board-size)]
           (when (>= y 0)
             (when (empty-field? @scoring-board x y) 
-              (reset! scoring-board (search-and-color @scoring-board x y)))
+              (swap! scoring-board search-and-color x y))
             (recur (dec y))))
         (recur (dec x))))
     @scoring-board))
