@@ -1,13 +1,13 @@
 (ns battle.battles
   (:require [battle.battle :refer :all])
-  (:require [ai.monte-carlo :refer :all])
-  (:require [ai.greedy :refer :all]))
+  (:require [ai.monte-carlo :as random])
+  (:require [ai.greedy :as greedy]))
 
 (defn random-VS-random []
-  (battle try-move try-move 10 10))
+  (battle random/move random/move 10 10))
 
 (defn black-random-VS-white-greedy []
-  (battle try-move get-best-position 5 2))
+  (battle random/move greedy/move 5 2))
 
 (defn greedy-VS-greedy []
-  (battle get-best-position get-best-position 1 1))
+  (battle greedy/move greedy/move 1 1))

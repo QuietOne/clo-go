@@ -32,7 +32,7 @@
     (cond
       (= option 1) (random-VS-random)
       (= option 2) (black-random-VS-white-greedy)
-      (= option 43) (greedy-VS-greedy)
+      (= option 3) (greedy-VS-greedy)
       :else "Option not available"))
   ([option n]
     (cond
